@@ -1,0 +1,11 @@
+*.iml
+*.iws
+*.ipr
+MANIFEST.MF
+target
+.idea
+.classpath
+.project
+.settings
+work
+generated-stubs
