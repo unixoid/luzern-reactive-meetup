@@ -178,8 +178,4 @@ public class PongApplication extends Application {
         started.set(true);
     }
 
-
-    public static void main(String[] args) throws Exception {
-        launch(args);
-    }
 }
