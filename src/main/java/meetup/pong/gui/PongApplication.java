@@ -68,7 +68,7 @@ public class PongApplication extends Application {
         try {
             State state = stateProperty.get();
 
-            if ((theirState.getTickNo() < state.getTickNo() - 1) || (theirState.getTickNo() > state.getTickNo() + 1)) {
+            if ((theirState.getTickNo() < state.getTickNo()) || (theirState.getTickNo() > state.getTickNo() + 1)) {
                 throw new PongException("Synchronization lost, my tick = " +
                         state.getTickNo() + ", their tick = " + theirState.getTickNo());
             }
@@ -156,6 +156,8 @@ public class PongApplication extends Application {
                                 oldCaretY - config.getMaxCaretVelocity());
                         carets.get(caretSide).setY(caretY);
                         break;
+                    case ESCAPE:
+                        finished.set(true);
                 }
             }
         });

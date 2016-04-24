@@ -23,8 +23,8 @@ class PongSlaveRouteBuilder extends AbstractPongRouteBuilder {
 
         from(urlBase + 'config')
             .process {
+                log.debug('Got configuration: {}', it.in.body)
                 Configuration config = Configuration.fromJson(it.in.body)
-                log.debug('Got configuration: {}', config)
                 it.in.headers['_config'] = it.in.body
                 it.in.body = Geometry.getInitialState(config).toJson()
             }

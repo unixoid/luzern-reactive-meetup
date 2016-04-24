@@ -1,9 +1,6 @@
 package meetup.pong.logic;
 
-import lombok.extern.slf4j.Slf4j;
 import meetup.pong.PongException;
-
-import static java.lang.Math.*;
 
 /**
  * @author Dmytro Rud
@@ -17,8 +14,8 @@ public class Geometry {
                 (config.getFieldHeight() - config.getCaretHeight() + 1) / 2.0,
                 config.getFieldWidth() / 2.0,
                 config.getFieldHeight() / 2.0,
-                cos(config.getBallInitialAngle()),
-                sin(config.getBallInitialAngle())
+                Math.cos(config.getBallInitialAngle()),
+                Math.sin(config.getBallInitialAngle())
         );
     }
 
@@ -47,14 +44,16 @@ public class Geometry {
         double ballXCoeff = oldState.getBallXCoeff();
         double ballCenterX = oldState.getBallCenterX() + config.getBallVelocity() * ballXCoeff;
         if (ballCenterX < leftBoundaryX) {
+            // bounced on the left
             if ((ballCenterY < leftCaretY) || (ballCenterY >= leftCaretY + config.getCaretHeight())) {
-                throw new PongException("Left player lost.");
+                throw new PongException("Left player lost");
             }
             ballCenterX = 2 * leftBoundaryX - ballCenterX;
             ballXCoeff = -ballXCoeff;
         } else if (ballCenterX > rightBoundaryX) {
+            // bounced on the right
             if ((ballCenterY < rightCaretY) || (ballCenterY >= rightCaretY + config.getCaretHeight())) {
-                throw new PongException("Right player lost.");
+                throw new PongException("Right player lost");
             }
             ballCenterX = 2 * rightBoundaryX - ballCenterX;
             ballXCoeff = -ballXCoeff;
