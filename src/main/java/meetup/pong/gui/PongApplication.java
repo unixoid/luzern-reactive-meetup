@@ -14,7 +14,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import lombok.Getter;
 import meetup.pong.PongException;
@@ -38,6 +37,7 @@ public class PongApplication extends Application {
     private static final int CARET_WIDTH = 20;
 
     @Getter private final AtomicBoolean started = new AtomicBoolean(false);
+    @Getter private final AtomicBoolean finished = new AtomicBoolean(false);
 
     // actually write-once, but cannot be made final for technical reasons
     private Configuration config;
@@ -61,13 +61,13 @@ public class PongApplication extends Application {
      *      Updated own state.
      */
     public State exchangeState(State theirState) throws InterruptedException {
-        State state = stateProperty.get();
-        if (state == null) {
-            // see catch block below
+        if (finished.get()) {
             return null;
         }
 
         try {
+            State state = stateProperty.get();
+
             if ((theirState.getTickNo() < state.getTickNo() - 1) || (theirState.getTickNo() > state.getTickNo() + 1)) {
                 throw new PongException("Synchronization lost, my tick = " +
                         state.getTickNo() + ", their tick = " + theirState.getTickNo());
@@ -94,7 +94,7 @@ public class PongApplication extends Application {
             return newState;
 
         } catch (PongException e) {
-            stateProperty.setValue(null);
+            finished.set(true);
             errorMessage.setText(e.getMessage());
             return theirState;
         }
@@ -130,7 +130,6 @@ public class PongApplication extends Application {
         carets.get(caretSide.other()).setFill(Color.BLACK);
 
         errorMessage = new Text(CARET_WIDTH + config.getFieldWidth() / 2, config.getFieldHeight() / 2, "");
-        errorMessage.setTextAlignment(TextAlignment.CENTER);
         errorMessage.setFont(new Font(20));
         errorMessage.setFill(Color.RED);
 
