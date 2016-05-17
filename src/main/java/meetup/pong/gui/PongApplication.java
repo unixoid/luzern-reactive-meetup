@@ -15,6 +15,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import lombok.Getter;
 import meetup.pong.PongException;
 import meetup.pong.camel.AbstractPongRouteBuilder;
@@ -82,11 +83,25 @@ public class PongApplication extends Application {
 
             double caretY = carets.get(caretSide).getY();
             oldCaretY = caretY;
-            State newState = Geometry.newState(
-                    config,
-                    state,
-                    (caretSide == CaretSide.LEFT) ? caretY : theirNewCaretY,
-                    (caretSide == CaretSide.LEFT) ? theirNewCaretY : caretY);
+
+            State newState;
+            if (theirState.getTickNo() == state.getTickNo()) {
+                // on the master side -- calculate a new geometry
+                newState = Geometry.newState(
+                        config,
+                        state,
+                        (caretSide == CaretSide.LEFT) ? caretY : theirNewCaretY,
+                        (caretSide == CaretSide.LEFT) ? theirNewCaretY : caretY);
+            } else {
+                // on the slave side -- repeat the geometry received from the master, only update my caret coordinate
+                newState = new State(theirState.getTickNo(),
+                        (caretSide == CaretSide.LEFT) ? caretY : theirNewCaretY,
+                        (caretSide == CaretSide.LEFT) ? theirNewCaretY : caretY,
+                        theirState.getBallCenterX(),
+                        theirState.getBallCenterY(),
+                        theirState.getBallXCoeff(),
+                        theirState.getBallYCoeff());
+            }
 
             Thread.sleep(config.getTickDelay());
 
@@ -168,6 +183,13 @@ public class PongApplication extends Application {
                 ball.setCenterX(CARET_WIDTH + newState.getBallCenterX());
                 ball.setCenterY(newState.getBallCenterY());
                 carets.get(caretSide.other()).setY(newState.getCaretY(caretSide.other()));
+            }
+        });
+
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                finished.set(true);
             }
         });
 

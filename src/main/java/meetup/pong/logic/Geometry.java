@@ -1,11 +1,21 @@
 package meetup.pong.logic;
 
+import lombok.extern.slf4j.Slf4j;
 import meetup.pong.PongException;
+import org.apache.commons.lang3.NotImplementedException;
+
+import static java.lang.Math.*;
 
 /**
  * @author Dmytro Rud
  */
+@Slf4j
 public class Geometry {
+
+    private enum AngleChangeAlgorithm {MIRROR, PROPORTIONAL}
+
+    private static final AngleChangeAlgorithm angleChangeAlgorithm = AngleChangeAlgorithm.PROPORTIONAL;
+
 
     public static State getInitialState(Configuration config) {
         return new State(
@@ -14,8 +24,8 @@ public class Geometry {
                 (config.getFieldHeight() - config.getCaretHeight() + 1) / 2.0,
                 config.getFieldWidth() / 2.0,
                 config.getFieldHeight() / 2.0,
-                Math.cos(config.getBallInitialAngle()),
-                Math.sin(config.getBallInitialAngle())
+                cos(config.getBallInitialAngle()),
+                sin(config.getBallInitialAngle())
         );
     }
 
@@ -28,7 +38,7 @@ public class Geometry {
         int upperBoundaryY = config.getBallRadius() - 1;
         int lowerBoundaryY = config.getFieldHeight() - config.getBallRadius();
         double ballYCoeff = oldState.getBallYCoeff();
-        double ballCenterY = oldState.getBallCenterY() - config.getBallInitialAngle() * ballYCoeff;
+        double ballCenterY = oldState.getBallCenterY() - config.getBallVelocity() * ballYCoeff;
         if (ballCenterY < config.getBallRadius()) {
             // bounced on the top
             ballCenterY = 2 * upperBoundaryY - ballCenterY;
@@ -49,14 +59,39 @@ public class Geometry {
                 throw new PongException("Left player lost");
             }
             ballCenterX = 2 * leftBoundaryX - ballCenterX;
-            ballXCoeff = -ballXCoeff;
+
+            switch (angleChangeAlgorithm) {
+                case MIRROR:
+                    ballXCoeff = -ballXCoeff;
+                    break;
+                case PROPORTIONAL:
+                    double newAngle = proportionalAngle(leftCaretY, ballCenterY, config);
+                    ballXCoeff = cos(newAngle);
+                    ballYCoeff = signum(ballYCoeff) * sin(newAngle);
+                    break;
+                default:
+                    throw new NotImplementedException("Algorithm " + angleChangeAlgorithm + " not implemented");
+            }
+
         } else if (ballCenterX > rightBoundaryX) {
             // bounced on the right
             if ((ballCenterY < rightCaretY) || (ballCenterY >= rightCaretY + config.getCaretHeight())) {
                 throw new PongException("Right player lost");
             }
             ballCenterX = 2 * rightBoundaryX - ballCenterX;
-            ballXCoeff = -ballXCoeff;
+
+            switch (angleChangeAlgorithm) {
+                case MIRROR:
+                    ballXCoeff = -ballXCoeff;
+                    break;
+                case PROPORTIONAL:
+                    double newAngle = proportionalAngle(rightCaretY, ballCenterY, config);
+                    ballXCoeff = -cos(newAngle);
+                    ballYCoeff = signum(ballYCoeff) * sin(newAngle);
+                    break;
+                default:
+                    throw new NotImplementedException("Algorithm " + angleChangeAlgorithm + " not implemented");
+            }
         }
 
         return new State(
@@ -67,6 +102,14 @@ public class Geometry {
                 ballCenterY,
                 ballXCoeff,
                 ballYCoeff);
+    }
+
+
+    private static double proportionalAngle(double caretY, double ballCenterY, Configuration config) {
+        double halfCaretHeight = config.getCaretHeight() / 2.0;
+        double angle = abs(caretY + halfCaretHeight - ballCenterY) / halfCaretHeight * 0.5 * 0.9 * PI;
+        log.debug("In proportionalAngle(): caretY={}, ballCenterY={} --> angle={}", caretY, ballCenterY, angle);
+        return angle;
     }
 
 }

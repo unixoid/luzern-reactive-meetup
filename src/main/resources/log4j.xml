@@ -63,7 +63,7 @@ Examples:  "%r [%t] %-5p %c %x - %m\n"
         </layout>
     </appender>
 
-    <logger name="meetup">
+    <logger name="meetup.pong.logic">
         <level value="DEBUG"/>
     </logger>
 
