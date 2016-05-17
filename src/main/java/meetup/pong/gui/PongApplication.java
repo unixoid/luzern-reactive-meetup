@@ -1,6 +1,7 @@
 package meetup.pong.gui;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -26,6 +27,7 @@ import meetup.pong.logic.State;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -105,7 +107,17 @@ public class PongApplication extends Application {
 
             Thread.sleep(config.getTickDelay());
 
-            stateProperty.set(newState);
+            final CountDownLatch latch = new CountDownLatch(1);
+
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    stateProperty.set(newState);
+                    latch.countDown();
+                }
+            });
+
+            latch.await();
             return newState;
 
         } catch (PongException e) {
