@@ -1,55 +1,45 @@
-class Item {
-    List items
-    int count
-    String bits = ''
-
-    @Override
-    String toString() {
-        "(${items?.size()} items=${items}, count=${count}, bits=${bits})"
-    }
+List<Map> tail2(List<Map> maplist) {
+    (maplist.size() > 2) ? maplist[2..-1] : []
 }
 
-List<Item> tail2(List<Item> a) {
-    (a.size() > 2) ? a[2..-1] : []
+List<Map> topDown(List<Map> maplist) {
+    topDownSorted(maplist.sort { it.count } )
 }
 
-List<Item> topDown(List<Item> a) {
-    topDownSorted(a.sort { it.count } )
-}
-
-List<Item> topDownSorted(List<Item> a) {
-    (a.size() == 1) ?
-            a :
-            topDown(tail2(a) + new Item(items: [a[0], a[1]], count: a[0].count + a[1].count))
+List<Map> topDownSorted(List<Map> maplist) {
+    (maplist.size() == 1) ?
+            maplist :
+            topDown(tail2(maplist) + [items: [maplist[0], maplist[1]], count: maplist[0].count + maplist[1].count, bits: ''])
 }
 
 Set<String> stringToSet(String s) {
-    new HashSet(s.collect { new String(it) } )
+    new HashSet(s.split('') as List)
 }
 
-List<Item> bottomUpSingleItem(Item a) {
-    (a.items[0] instanceof Item) ?
-            bottomUp(new Item(items: ((Item) a.items[0]).items, bits: a.bits)) :
-            [a]
+List<Map> bottomUpSingleItem(Map m) {
+    (m.items[0] instanceof Map) ?
+            bottomUp([items: m.items[0].items, bits: m.bits]) :
+            [m]
 }
 
-List<Item> bottomUp(Item a) {
-    (a.items.size() == 1) ?
-            bottomUpSingleItem(a) :
-            bottomUp(new Item(items: [a.items[0]], bits: a.bits + '0')) + bottomUp(new Item(items: [a.items[1]], bits: a.bits + '1'))
+List<Map> bottomUp(Map m) {
+    (m.items.size() == 1) ?
+            bottomUpSingleItem(m) :
+            bottomUp([items: [m.items[0]], bits: m.bits + '0']) +
+            bottomUp([items: [m.items[1]], bits: m.bits + '1'])
 }
 
-List<Item> stats(String s) {
-    stringToSet(s).collect { new Item(items: [it], count: s.count(it)) }
+List<Map> stats(String s) {
+    stringToSet(s).collect { [items: [it], count: s.count(it), bits: ''] }
 }
 
-Map<String, String> bitmap(List<Item> a) {
-    a.collectEntries { [it.items[0], it.bits] }
+Map<String, String> bitmap(List<Map> maplist) {
+    maplist.collectEntries { [it.items[0], it.bits] }
 }
-
 
 List<String> huffmann(String s) {
     s.collect { bitmap(bottomUp(topDown(stats(s))[0]))[it] }
 }
 
-print huffmann('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbcccddeef')
+def s = 'aaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbcdefghij'
+println huffmann(s)
